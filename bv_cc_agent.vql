@@ -1,0 +1,83 @@
+﻿# Generated with Denodo Platform 8.0 update 20210209.
+
+ENTER SINGLE USER MODE;
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+CREATE OR REPLACE FOLDER '/1 - connectivity' ;
+
+CREATE OR REPLACE FOLDER '/1 - connectivity/1 - data sources' ;
+
+CREATE OR REPLACE DATASOURCE JDBC ds_calltracking
+    FOLDER = '/1 - connectivity/1 - data sources'
+    DRIVERCLASSNAME = 'com.mysql.jdbc.Driver'
+    DATABASEURI = 'jdbc:mysql://localhost:3306/calltracking'
+    USERNAME = 'root'
+    USERPASSWORD = 'ysxv9Jqlyf0gLCktljb8snpEFlJOvLCODXtQxuNlaf8sbRpdv01WsJkj+oGasavMWEk9LTO5oSg2I64SNwOOEqDxmbk8DZefZBsv8DDVnUiH/Vvq+r1lL9bwfaKMGmpB' ENCRYPTED
+    CLASSPATH = 'mysql-5'
+    DATABASENAME = 'mysql'
+    DATABASEVERSION = '5'
+    FETCHSIZE = 1000
+    VALIDATIONQUERY = 'Select 1'
+    INITIALSIZE = 4
+    MAXIDLE = -1
+    MINIDLE = 0
+    MAXACTIVE = 20
+    EXHAUSTEDACTION = 1
+    TESTONBORROW = true
+    TESTONRETURN = false
+    TESTWHILEIDLE = false
+    TIMEBETWEENEVICTION = -1
+    NUMTESTPEREVICTION = 3
+    MINEVICTABLETIME = 1800000
+    POOLPREPAREDSTATEMENTS = false
+    MAXOPENPREPAREDSTATEMENTS = -1
+    PROPERTIES ('vdp.streamRows'='yes')
+    DATA_LOAD_CONFIGURATION (
+        BATCHINSERTSIZE = 200
+        USEEXTERNALTABLES ( 
+            ONMOVEREAD = false,
+            ONMOVEWRITE = true
+        )
+    );
+
+CREATE OR REPLACE FOLDER '/1 - connectivity/2 - base views' ;
+
+CREATE OR REPLACE WRAPPER JDBC bv_cc_agent
+    FOLDER = '/1 - connectivity/2 - base views'
+    DATASOURCENAME=ds_calltracking
+    CATALOGNAME='calltracking' 
+    RELATIONNAME='agent' 
+    OUTPUTSCHEMA (
+        agent_id = 'agent_id' :'java.math.BigDecimal' (OPT) (sourcetypedecimals='0', sourcetyperadix='10', sourcetypesize='22', description='', sourcetypeid='3', sourcetypename='DECIMAL')  NOT NULL SORTABLE,
+        agent_code = 'agent_code' :'java.lang.String' (OPT) (sourcetyperadix='10', sourcetypesize='50', description='', sourcetypeid='12', sourcetypename='VARCHAR')  NOT NULL SORTABLE,
+        agent_name = 'agent_name' :'java.lang.String' (OPT) (sourcetyperadix='10', sourcetypesize='50', description='', sourcetypeid='12', sourcetypename='VARCHAR')  NOT NULL SORTABLE
+    )
+    CONSTRAINT 'PRIMARY' PRIMARY KEY ( 'agent_id' )
+    INDEX 'PRIMARY' CLUSTER UNIQUE PRIMARY ( 'agent_id' );
+
+CREATE OR REPLACE TABLE bv_cc_agent I18N us_pst (
+        agent_id:decimal (notnull, sourcetypeid = '3', sourcetyperadix = '10', sourcetypedecimals = '0', sourcetypesize = '22', description = ''),
+        agent_code:text (notnull, sourcetypeid = '12', sourcetyperadix = '10', sourcetypesize = '50', description = ''),
+        agent_name:text (notnull, sourcetypeid = '12', sourcetyperadix = '10', sourcetypesize = '50', description = '')
+    )
+    FOLDER = '/1 - connectivity/2 - base views'
+    CONSTRAINT 'PRIMARY' PRIMARY KEY ( 'agent_id' )
+    CACHE OFF
+    TIMETOLIVEINCACHE DEFAULT
+    ADD SEARCHMETHOD bv_cc_agent(
+        I18N us_pst
+        CONSTRAINTS (
+             ADD agent_id (any) OPT ANY
+             ADD agent_code (any) OPT ANY
+             ADD agent_name (any) OPT ANY
+        )
+        OUTPUTLIST (agent_code, agent_id, agent_name
+        )
+        WRAPPER (jdbc bv_cc_agent)
+    );
+
+
+
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+EXIT SINGLE USER MODE;
